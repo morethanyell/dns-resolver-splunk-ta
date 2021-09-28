@@ -1,0 +1,8 @@
+﻿url,comment,just_a_number
+"https://en.wikipedia.org/wiki/The_Beatles#1957%E2%80%931963:_Formation,_Hamburg,_and_UK_popularity",a relatively long url,1916
+www.facebook.com,showing a url that starts with www,273
+twitter.com,no www in the url,1658
+https://workspace.google.com/intl/en_ph/products/drive/?utm_source=google&utm_medium=cpc&utm_campaign=1010746-Workspace-APAC-PH-en-BKWS-EXA-Regular&utm_content=text-ad-none-none-DEV_c-CRE_521939396129-ADGP_Hybrid%20%7C%20BKWS%20-%20EXA%20%7C%20Txt%20~%20Drive%20-%20Temporary-KWID_43700063742803579-kwd-2833008900&userloc_20822-network_g&utm_term=KW_google%20drive&gclid=Cj0KCQjw18WKBhCUARIsAFiW7JyR_NnvuoeM6teTq4svcbk0l9vprS1brOardCs6_NtCL6DzXegxvh0aAnFUEALw_wcB&gclsrc=aw.ds,a very long url,943
+https://www.instagram.com/morethanyell/,a short url,1374
+http://global.geely.com/,a url that's not using HTTPs,274
+api/v2/endpoint,a url that will not work,189
