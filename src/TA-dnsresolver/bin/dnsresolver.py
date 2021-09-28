@@ -40,29 +40,53 @@ class dnsresolver(StreamingCommand):
         **Description:** Set to true to generate more fields such as `ipv6_addr`, `fqdn`, and `addr_info`''',
         require=False, default=False, validate=validators.Boolean())
 
+    first_match_only = Option(
+        doc='''
+        **Syntax:** **first_match_only=***<true|false>*
+        **Description:** Set to true to avoid Multi-Value fields and only pick the first result''',
+        require=False, default=False, validate=validators.Boolean())
+
     def stream(self, events):
 
-        if self.outf.__eq__(self.outfipv6): raise Exception("Field names for output of IPv4 and IPv6 address must not be the same.")
+        if self.outf.__eq__(self.outfipv6):
+            raise Exception("Field names for output of IPv4 and IPv6 address must not be the same.")
 
         for event in events:
 
             resolved = self.resolver(event[self.inpf], self.port)
 
-            addrinfo = resolved[1]
+            addrinfo_proto4 = resolved[1]
+            addrinfo_proto6 = resolved[2]
 
-            if addrinfo is not None:
-                ipv4 = 'n/a' if len(addrinfo) < 1 else addrinfo[0][4][0]
-                ipv6 = 'n/a' if len(addrinfo) < 4 else addrinfo[4][4][0]
+            if addrinfo_proto4 is not None:
 
-                if addrinfo is not None:
-                    if not self.verbose:
-                        event[self.outf] = ipv4
+                if self.first_match_only:
+                    event[self.outf] = addrinfo_proto4[0][4][0]
+                else:
+                    ipv4 = []
+                    for i in addrinfo_proto4: ipv4.append(i[4][0])
+                    event[self.outf] = list(set(ipv4))
+
+                if self.verbose:
+
+                    outfipv6 = ''
+
+                    if self.first_match_only:
+                        fqdn = socket.getfqdn(addrinfo_proto4[0][4][0])
+                        if addrinfo_proto6 is not None:
+                            outfipv6 = addrinfo_proto6[0][4][0]
                     else:
-                        event[self.outf] = ipv4
-                        event[self.outfipv6] = ipv6
-                        event['treated_url'] = resolved[0]
-                        event['fqdn'] = socket.getfqdn(ipv4)
-                        event['full_socket_detail'] = addrinfo
+                        fqdn = []
+                        for ip in list(set(ipv4)): fqdn.append(socket.getfqdn(ip))
+                        if addrinfo_proto6 is not None:
+                            ipv6 = []
+                            for i in addrinfo_proto6: ipv6.append(i[4][0])
+                            outfipv6 = list(set(ipv6))
+                    
+                    
+                    event[self.outfipv6] = '' if outfipv6 is None else outfipv6
+                    event['fqdn'] = fqdn
+                    event['treated_url'] = resolved[0]
 
             yield event
 
@@ -74,11 +98,18 @@ class dnsresolver(StreamingCommand):
         url_treated = url_treated[0] if url_treated else ""
 
         try:
-            addrinfo = socket.getaddrinfo(url_treated, port)
+            addrinfo_proto4 = socket.getaddrinfo(
+                url_treated, port, socket.AF_INET)
         except:
-            addrinfo = None
+            addrinfo_proto4 = None
 
-        return (url_treated, addrinfo)
+        try:
+            addrinfo_proto6 = socket.getaddrinfo(
+                url_treated, port, socket.AF_INET6)
+        except:
+            addrinfo_proto6 = None
+
+        return (url_treated, addrinfo_proto4, addrinfo_proto6)
 
 
 dispatch(dnsresolver, sys.argv, sys.stdin, sys.stdout, __name__)
